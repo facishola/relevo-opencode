@@ -323,7 +323,8 @@ parcial; si el destino está dentro del origen, rechaza la operación mediante
 una comparación estructural de rutas. La configuración existente sigue siendo
 intocable y una configuración nueva queda con `enabled: false`.
 
-La release queda preparada para GitHub. La auditoría del historial y del árbol
+La release fue publicada en
+`https://github.com/facishola/relevo-opencode`. La auditoría del historial y del árbol
 de trabajo no encontró coincidencias con claves, tokens, cabeceras Bearer ni
 llaves privadas; el detalle reproducible está en
 `INFORME_AUDITORIA_PUBLICACION_0.3.0.md`. No se incluyeron credenciales ni
@@ -361,7 +362,7 @@ La verificación final ejecutada el 23-10-2026 fue:
 - Puertos de mocks y servidores (`9129`, `9130`, `9131`, `28900`, `28901`):
   sin listeners remanentes.
 
-Clasificación local: **APROBADO para el MVP mock-only y portable**. La
-publicación pública y la clonación limpia son puertas de entrega separadas;
-no convierten el comportamiento en infalible ni sustituyen canaries
-opcionales con proveedores reales.
+Clasificación final: **APROBADO para el MVP público mock-only y portable**. La
+publicación y el clone limpio quedaron verificados; esto no convierte el
+comportamiento en infalible ni sustituye canaries opcionales con proveedores
+reales.

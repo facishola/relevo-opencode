@@ -85,15 +85,15 @@ se debe repetir la matriz local antes de activar el plugin.
 - [x] Realizar code review de cinco ejes y resolver hallazgos críticos/requeridos.
 - [x] Preparar snapshot Git y release; publicar solo después de confirmar la visibilidad del repositorio.
 
-## Release 0.3.0 — pendiente de publicación
+## Release 0.3.0 — publicado y verificado
 
 - [x] Implementar descubrimiento automático estricto y probarlo sin lista manual.
 - [x] Actualizar instalador, documentación y metadata a `relevo-opencode`.
 - [x] Verificar T0–T12 después del cambio y ejecutar validación de paquete.
 - [x] Auditar historial completo en busca de secretos antes de publicar.
-- [ ] Crear repositorio público `facishola/relevo-opencode` sin tocar el privado.
-- [ ] Crear snapshot Git reproducible y subirlo sin `--force`.
-- [ ] Clonar el repositorio público en un directorio temporal y repetir la
+- [x] Crear repositorio público `facishola/relevo-opencode` sin tocar el privado.
+- [x] Crear snapshot Git reproducible y subirlo sin `--force`.
+- [x] Clonar el repositorio público en un directorio temporal y repetir la
   instalación y pruebas de release.
 
 ## Puerta de aceptación del MVP público

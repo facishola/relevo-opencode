@@ -7,8 +7,8 @@ Destino previsto: `facishola/relevo-opencode`
 ## Alcance
 
 Se revisó el historial Git disponible, el árbol de trabajo y el contenido que
-entra en el paquete npm. La auditoría se hizo antes de crear o publicar el
-repositorio público. No se inspeccionaron ni modificaron la configuración
+entra en el paquete npm antes de publicar. Después se verificó el repositorio
+público con un clone limpio. No se inspeccionaron ni modificaron la configuración
 global de OpenCode, el plugin global, proyectos protegidos, credenciales ni
 respaldos externos.
 
@@ -41,5 +41,8 @@ incluyen en el tarball y son endpoints loopback de prueba, no credenciales.
 
 ## Decisión
 
-**APTO para crear el repositorio público**, sujeto a verificar después de la
-publicación un clone limpio, la instalación portable y la suite de pruebas.
+**PUBLICADO Y VERIFICADO.** El repositorio público quedó disponible en
+`https://github.com/facishola/relevo-opencode`; su clone limpio apuntó a
+`4d0ceb48e908c5db9694a0cced5db4f1719ff72c`, ejecutó `npm ci --ignore-scripts
+--offline`, `npm test` con 82/82 pruebas, validación de paquete y el instalador
+portable con `enabled: false`.
