@@ -5,8 +5,9 @@
 | Runtime | Alcance | Resultado | Evidencia |
 | --- | --- | --- | --- |
 | OpenCode V2 2.1.3 | Mocks loopback, XDG aislado | APROBADO para laboratorio | T0–T12 end-to-end, suite local, paquete local |
+| OpenCode V2 2.1.3 | Paquete público 0.3.0, instalación local aislada | APROBADO como MVP público | metadata, instalador, descubrimiento automático estricto, paquete limpio, CI preparada |
 | OpenCode V2 no probado | Cualquier proveedor | DESCONOCIDO | Repetir contrato y matriz antes de activar |
-| Proveedores reales | Fuera del laboratorio | NO EJECUTADO | Falta autorización y datos de modelos |
+| Proveedores reales | Canaries aislados, solo modelos gratuitos | PARCIAL | OpenRouter, Nvidia y OpenCode tuvieron candidatos PASS; cuotas y endpoints no son uniformes |
 
 ## Capacidades requeridas
 

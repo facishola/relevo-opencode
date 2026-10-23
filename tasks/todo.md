@@ -46,9 +46,23 @@
 - [x] Mantener cuotas model-scoped como bloqueo solo del modelo.
 - [x] Añadir pruebas unitarias/integración y actualizar README, changelog, ADR e informe.
 
+## Descubrimiento automático estricto — release 0.3.0
+
+- [x] Descubrir candidatos desde `ctx.model.list()` sin lista manual.
+- [x] Normalizar costes como objeto y como colección de niveles.
+- [x] Rechazar precio desconocido, modelos pagos, disabled/deprecated y
+  capacidades o límites incompatibles.
+- [x] Mantener `free_models` como excepción explícita para modelos locales sin
+  precio publicado, sin sobrepasar límites desconocidos.
+- [x] Permitir destinos con una ventana menor cuando la solicitud medida cabe
+  dentro del margen de seguridad del 80%.
+- [x] Añadir caché acotada del inventario y diagnóstico de candidatos excluidos.
+- [x] Generar configuración portable con descubrimiento activado y plugin
+  desactivado.
+
 ## Puerta de cierre
 
-Resultado actual: **APROBADO para laboratorio/mock-only**. Esto no equivale a
+Resultado actual: **APROBADO para laboratorio/mock-only y descubrimiento automático**. Esto no equivale a
 infalibilidad ni a aprobación de producción. Si cambia la versión de OpenCode,
 se debe repetir la matriz local antes de activar el plugin.
 
@@ -58,3 +72,34 @@ se debe repetir la matriz local antes de activar el plugin.
 - [x] Verificar que un `opencode.jsonc` existente no se sobrescribe.
 - [x] Revisar comandos slash, skill y README.txt con la validación del paquete.
 - [x] Crear snapshot Git inicial en `master` después de la revisión staged.
+
+## Fase 8 — MVP público reproducible
+
+- [x] Auditar y fijar metadata pública del paquete, licencia, versión y URL del repositorio.
+- [x] Agregar pruebas de paquete limpio, exclusión de artefactos y consistencia de release.
+- [x] Verificar instalación desde una copia limpia/paquete en un proyecto aislado.
+- [x] Endurecer y probar el instalador contra destinos inválidos, reinstalación y configuración existente.
+- [x] Agregar CI para Node soportado, suite, sintaxis, paquete y auditoría de dependencias.
+- [x] Actualizar README/README.txt, changelog, matriz de compatibilidad, seguridad y guía de publicación.
+- [x] Ejecutar auditoría de secretos, dependencias, listeners y tráfico externo.
+- [x] Realizar code review de cinco ejes y resolver hallazgos críticos/requeridos.
+- [x] Preparar snapshot Git y release; publicar solo después de confirmar la visibilidad del repositorio.
+
+## Release 0.3.0 — pendiente de publicación
+
+- [x] Implementar descubrimiento automático estricto y probarlo sin lista manual.
+- [x] Actualizar instalador, documentación y metadata a `relevo-opencode`.
+- [x] Verificar T0–T12 después del cambio y ejecutar validación de paquete.
+- [x] Auditar historial completo en busca de secretos antes de publicar.
+- [ ] Crear repositorio público `facishola/relevo-opencode` sin tocar el privado.
+- [ ] Crear snapshot Git reproducible y subirlo sin `--force`.
+- [ ] Clonar el repositorio público en un directorio temporal y repetir la
+  instalación y pruebas de release.
+
+## Puerta de aceptación del MVP público
+
+- [x] Todas las pruebas unitarias, contractuales, distribución y E2E loopback pasan.
+- [x] El tarball contiene solo archivos distribuibles y el instalador deja `enabled: false`.
+- [x] La documentación permite instalar y revertir sin modificar configuración global.
+- [x] No hay secretos ni artefactos de laboratorio en el snapshot ni en el paquete.
+- [x] El resultado queda clasificado como MVP público compatible con OpenCode 2.1.3.

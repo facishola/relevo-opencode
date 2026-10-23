@@ -373,3 +373,83 @@ la configuración global intacta.
 - El snapshot Git no incluye credenciales, `node_modules`, bases de datos,
   cachés ni logs generados.
 
+## Fase 8 — MVP público reproducible para GitHub
+
+### Objetivo
+
+Convertir el prototipo de laboratorio en una release pública descargable desde
+GitHub, instalable por ruta local en un proyecto OpenCode y verificable sin
+proveedores pagos ni credenciales incluidas. El alcance sigue siendo fallback
+de modelos; no incluye relevo automático de agentes.
+
+### Dependencias y orden
+
+1. Auditar el paquete, el instalador, el árbol Git y la compatibilidad declarada.
+2. Definir el contrato de release: metadata pública, licencia, README de inicio,
+   CI, política de seguridad y ausencia de artefactos generados.
+3. Escribir primero las pruebas de release e instalación reproducible.
+4. Corregir únicamente los fallos demostrados por esas pruebas.
+5. Ejecutar suite unitaria, matriz loopback, instalación desde paquete y
+   validación de una copia limpia.
+6. Revisar diff, secretos, dependencias, paquete final y documentación.
+7. Preparar commit y push solamente después de la aprobación de visibilidad del
+   repositorio; la visibilidad pública no se cambia implícitamente.
+
+### Criterios de aceptación
+
+- `package.json` es publicable, tiene licencia y metadata de repositorio, y no
+  declara `private: true`.
+- Una copia limpia del repositorio instala en un proyecto temporal con
+  `enabled: false` sin sobrescribir configuración existente.
+- La prueba de paquete confirma que el tarball no contiene tests, logs,
+  cachés, bases de datos, respaldos, credenciales ni archivos de laboratorio.
+- CI ejecuta la suite en las versiones Node soportadas, chequea sintaxis,
+  empaquetado y auditoría de dependencias.
+- La documentación permite clonar/descargar, instalar, configurar, activar,
+  desactivar y revertir sin tocar configuración global.
+- Todos los cambios están revisados en corrección, seguridad, arquitectura,
+  legibilidad y rendimiento.
+- La release se clasifica como MVP público compatible con OpenCode 2.1.3 y no
+  como garantía universal para versiones no probadas.
+
+### Riesgos y límites
+
+- Cambios futuros del contrato V2 pueden romper el plugin; la puerta de
+  capacidades y la matriz por versión permanecen obligatorias.
+- Un repositorio privado no permite descarga anónima; hacerlo público requiere
+  una decisión explícita del propietario.
+- Los proveedores reales, cuotas y límites de modelos cambian; la release no
+  incrusta claves ni promete disponibilidad externa.
+
+## Fase 9 — Descubrimiento automático portable
+
+### Objetivo
+
+Permitir que una instalación nueva use el inventario disponible de OpenCode sin
+conocer previamente los modelos gratuitos del proyecto, manteniendo una
+política estricta y fail-closed.
+
+### Decisiones
+
+- `auto_discover_free_models` se activa en la configuración generada por el
+  instalador; `enabled` sigue siendo `false`.
+- El inventario de `ctx.model.list()` se consulta con timeout, caché acotada y
+  sin llamadas de salud a proveedores.
+- Solo se aceptan candidatos con coste cero verificable, límites conocidos,
+  capacidades compatibles, estado habilitado y no deprecated.
+- `free_models` puede declarar un modelo local cuyo precio sea desconocido,
+  pero no sustituye la comprobación de límites o capacidades.
+- La elegibilidad de contexto se decide con la solicitud medida y el margen del
+  80%; no se exige que el destino tenga una ventana igual o mayor a la fuente.
+
+### Criterios de aceptación
+
+- Una instalación limpia con listas vacías descubre y utiliza un destino free en
+  el fixture de fallback.
+- Costes objeto y tiered-array producen la misma decisión segura.
+- Modelos pagos, desconocidos, disabled, deprecated o incompatibles quedan
+  fuera con razón diagnóstica.
+- T0–T12, suite unitaria, sintaxis, empaquetado e instalación limpia pasan.
+- El repositorio público se publica solo después de revisar el historial y
+  verificar un clone limpio.
+

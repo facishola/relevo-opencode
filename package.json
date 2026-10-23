@@ -1,19 +1,26 @@
 {
   "name": "opencode-fallback",
-  "version": "0.1.0-prototype",
-  "description": "Fallback automático y fail-closed de modelos para OpenCode V2; validado en laboratorio.",
+  "version": "0.3.0",
+  "description": "Fallback automático y fail-closed de modelos para OpenCode V2.",
   "type": "module",
   "main": "./index.js",
   "exports": {
     ".": "./index.js"
   },
-  "private": true,
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/facishola/relevo-opencode.git"
+  },
+  "homepage": "https://github.com/facishola/relevo-opencode#readme",
+  "bugs": {
+    "url": "https://github.com/facishola/relevo-opencode/issues"
+  },
   "engines": {
     "node": ">=18"
   },
   "keywords": ["opencode", "opencode-plugin", "fallback", "model-fallback"],
-  "files": ["index.js", "lib", "skills", "commands", "scripts", "docs", "examples", "README.md", "README.txt", "CHANGELOG.md", "package.json"],
+  "files": ["index.js", "lib", "skills", "commands", "scripts", "docs", "examples", "README.md", "README.txt", "CHANGELOG.md", "package.json", "LICENSE", "SECURITY.md"],
   "scripts": {
     "test:contract": "node --test tests/phase0-contract.test.mjs",
     "test:package": "node --test tests/phase0-package.test.mjs",
@@ -22,12 +29,14 @@
     "test:session": "node --test tests/phase4-session-control.test.mjs",
     "test:logger": "node --test tests/phase5-logger.test.mjs",
     "test:free-provider": "node --test tests/phase6-free-provider.test.mjs",
+    "test:discovery": "node --test tests/phase9-discovery.test.mjs",
     "test:distribution": "node --test tests/phase7-distribution.test.mjs",
+    "test:release": "node --test tests/phase8-release.test.mjs",
     "test:e2e:local": "node tests/fixtures/run-phase3-matrix-local.mjs",
     "test:runtime": "node --test tests/phase0-runtime.test.mjs",
     "test:policy:phase1": "node --test tests/phase1-policy.test.mjs",
     "test:integration:phase1": "node --test tests/phase1-integration.test.mjs",
     "test:policy": "node --input-type=module -e \"import { FallbackPolicy } from './lib/policy.js'; console.log('policy module loads OK');\"",
-    "test": "npm run test:contract && npm run test:package && npm run test:runtime && npm run test:policy:phase1 && npm run test:integration:phase1 && npm run test:context && npm run test:safety && npm run test:session && npm run test:logger && npm run test:free-provider && npm run test:distribution && npm run test:policy"
+    "test": "npm run test:contract && npm run test:package && npm run test:runtime && npm run test:policy:phase1 && npm run test:integration:phase1 && npm run test:context && npm run test:safety && npm run test:session && npm run test:logger && npm run test:free-provider && npm run test:discovery && npm run test:distribution && npm run test:release && npm run test:policy"
   }
 }

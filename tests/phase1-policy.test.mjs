@@ -90,3 +90,23 @@ test("policy treats invalid limits as unknown and bounds async model inventory",
   assert.equal(boundedInventory.allow, false);
   assert.equal(boundedInventory.reason, "contexto_destino_desconocido");
 });
+
+test("policy allows a smaller known destination for a request measured separately", async () => {
+  const policy = new FallbackPolicy({
+    enabled: true,
+    fallback_models: ["primary/large", "free/small"],
+  });
+  const result = await policy.canSafelySwitch(
+    "primary/large",
+    "free/small",
+    async () => ({
+      data: [
+        { providerID: "primary", id: "large", limit: { context: 131072, output: 8192 } },
+        { providerID: "free", id: "small", limit: { context: 32768, output: 4096 } },
+      ],
+    }),
+  );
+
+  assert.equal(result.allow, true);
+  assert.equal(result.reason, "contexto_destino_conocido");
+});

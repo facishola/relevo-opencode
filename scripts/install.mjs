@@ -1,6 +1,6 @@
-import { cp, mkdir, writeFile } from "node:fs/promises";
+import { cp, mkdir, readdir, writeFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
-import { dirname, join, resolve, sep } from "node:path";
+import { dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url));
@@ -41,9 +41,26 @@ async function main() {
   if (missing.length > 0) {
     throw new Error(`Origen inválido; faltan: ${missing.join(", ")}`);
   }
-  const sourcePrefix = source.endsWith(sep) ? source : `${source}${sep}`;
-  if (source === target || target.startsWith(sourcePrefix)) {
+  const relativeTarget = relative(source, target);
+  const targetInsideSource = relativeTarget === ""
+    || (relativeTarget !== ".."
+      && !relativeTarget.startsWith(`..${sep}`)
+      && !isAbsolute(relativeTarget));
+  if (targetInsideSource) {
     throw new Error("El destino no puede estar dentro del directorio fuente");
+  }
+
+  const managedTargets = [];
+  for (const entry of ["index.js", "lib", "package.json", "package-lock.json"]) {
+    if (existsSync(join(source, entry))) managedTargets.push(join(pluginTarget, entry));
+  }
+  for (const entry of await readdir(join(source, "commands", "fallback"))) {
+    managedTargets.push(join(commandTarget, entry));
+  }
+  managedTargets.push(join(skillTarget, "SKILL.md"));
+  const existingManaged = managedTargets.filter((entry) => existsSync(entry));
+  if (!args.dryRun && existingManaged.length > 0) {
+    throw new Error(`El destino ya contiene archivos administrados; no se modifica: ${existingManaged.join(", ")}`);
   }
 
   const configCandidates = [join(target, "opencode.jsonc"), join(target, "opencode.json")];
@@ -82,6 +99,9 @@ async function main() {
       "options": {
         "enabled": false,
         "free_only": true,
+        "auto_discover_free_models": true,
+        "fallback_models": [],
+        "free_models": [],
         "compaction_enabled": false
       }
     }

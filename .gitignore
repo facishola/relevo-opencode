@@ -16,6 +16,8 @@ tests/fixtures/**/*.pile
 tests/fixtures/**/*.out
 tests/fixtures/**/probe-events.jsonl
 tests/fixtures/**/*.tgz
+tests/fixtures/real-integration-*/
+tests/fixtures/real-local-models/
 
 # Copias de trabajo y respaldos históricos conservados fuera del snapshot limpio
 index.js.*_broken

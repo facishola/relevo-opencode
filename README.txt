@@ -1,7 +1,7 @@
 OPENCODE-FALLBACK — GUÍA DE USO
 ================================
 
-Este proyecto contiene un plugin V2 para relevar automáticamente el modelo
+Este proyecto contiene el MVP público 0.3.0 de un plugin V2 para relevar automáticamente el modelo
 actual por otro modelo permitido cuando OpenCode observa un fallo recuperable.
 
 El plugin conserva la sesión, el agente, el prompt, las herramientas y los
@@ -15,6 +15,17 @@ REQUISITOS
 - Node.js >= 18 para el instalador y las pruebas.
 - Un proyecto aislado para la primera instalación.
 - Modelos con referencias completas: providerID/modelID.
+
+DESCARGA DESDE GITHUB
+---------------------
+
+git clone https://github.com/facishola/relevo-opencode.git
+node relevo-opencode/scripts/install.mjs --source relevo-opencode --target .
+
+También se puede descargar el ZIP del repositorio y usar la carpeta extraída
+como --source. El instalador es local, no necesita credenciales y deja el
+plugin desactivado. Si ya existe opencode.json o opencode.jsonc, no lo
+sobrescribe: informa que hay que hacer un merge manual.
 
 INSTALACIÓN EN OTRO PROYECTO
 ----------------------------
@@ -33,6 +44,10 @@ INSTALACIÓN EN OTRO PROYECTO
 
    node C:\ruta\a\opencode-fallback\scripts\install.mjs --source C:\ruta\a\opencode-fallback --target C:\ruta\al\proyecto
 
+Validar después de instalar:
+
+   node C:\ruta\a\opencode-fallback\scripts\validate-install.mjs --target C:\ruta\al\proyecto
+
 El instalador copia el runtime a vendor/opencode-fallback, los comandos a
 .opencode/commands/fallback y el skill a .opencode/skills. Si el proyecto ya
 tiene opencode.jsonc, no lo sobrescribe: el agente debe hacer un merge mínimo.
@@ -44,11 +59,16 @@ La primera configuración debe mantener:
 
    enabled: false
    free_only: true
+   auto_discover_free_models: true
+   fallback_models: []
+   free_models: []
    compaction_enabled: false
 
-Después hay que completar free_models y fallback_models, verificar límites de
-contexto/output y confirmar que los modelos sean gratuitos. No se modifica la
-configuración global de OpenCode.
+No hace falta conocer de antemano los modelos gratuitos: el plugin consulta el
+catálogo de OpenCode y acepta únicamente candidatos con coste cero verificable,
+límites conocidos y capacidades compatibles. Los modelos locales sin precio
+publicado deben declararse en free_models. No se modifica la configuración
+global de OpenCode.
 
 ACTIVAR Y DESACTIVAR
 --------------------
@@ -73,6 +93,7 @@ Desde este proyecto:
 
    npm test
    npm run test:e2e:local
+   node scripts/validate-package.mjs
    node --check index.js
    npm pack --dry-run --ignore-scripts --offline
 
@@ -99,7 +120,7 @@ ARCHIVOS IMPORTANTES
 ESTADO
 ------
 
-El resultado está aprobado para laboratorio/mock-only, no como garantía de
-producción ni de infalibilidad. Cambios de versión de OpenCode requieren
+El resultado es un MVP público compatible con OpenCode 2.1.3, no una garantía
+de producción ni de infalibilidad. Cambios de versión de OpenCode requieren
 repetir la matriz local antes de activar el plugin.
 

@@ -8,6 +8,19 @@ agentes automáticamente.
 
 ## Instalación recomendada
 
+Para una instalación pública, descargar el repositorio desde GitHub y ejecutar
+el instalador desde el proyecto destino:
+
+```powershell
+git clone https://github.com/facishola/relevo-opencode.git
+node .\relevo-opencode\scripts\install.mjs `
+  --source .\relevo-opencode `
+  --target (Get-Location).Path
+```
+
+El mismo flujo funciona con un ZIP extraído. El instalador no necesita claves,
+no contacta proveedores y deja el plugin desactivado.
+
 Desde el proyecto destino, ejecutar el comando slash si ya se copiaron los
 comandos:
 
@@ -40,6 +53,9 @@ La configuración segura es:
       "options": {
         "enabled": false,
         "free_only": true,
+        "auto_discover_free_models": true,
+        "fallback_models": [],
+        "free_models": [],
         "compaction_enabled": false
       }
     }
@@ -48,9 +64,11 @@ La configuración segura es:
 }
 ```
 
-Antes de activar, completar `free_models` y `fallback_models` con referencias
-completas `providerID/modelID`, declarar los límites `context` y `output` y
-comprobar que los destinos realmente sean gratuitos.
+Al activar, el plugin descubre automáticamente los candidatos gratuitos desde
+el inventario de OpenCode. Solo se consideran modelos habilitados, no
+deprecated, con coste cero, límites y capacidades compatibles. `free_models` y
+`fallback_models` son opcionales: el primero permite declarar modelos locales
+sin precio publicado y el segundo permite imponer prioridades manuales.
 
 ## Operación
 

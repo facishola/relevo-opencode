@@ -226,10 +226,142 @@ de OpenCode, proyectos protegidos ni Git. El runner deja libres los puertos de
 los mocks al finalizar. Se detectaron puertos de servidores OpenCode
 preexistentes y no se alteraron.
 
-Pendientes deliberados: canary con proveedores reales (requiere autorización) y
-relevo automático de agentes (fase separada). La cancelación auxiliar quedó
+Pendientes deliberados: ampliar los canaries reales a nuevos modelos y
+versiones, y relevo automático de agentes (fase separada). La cancelación auxiliar quedó
 cerrada con límites y señales best-effort; no se usa `session.interrupt()`
 automáticamente porque detiene toda la sesión. La decisión de handoff está en
 `docs/decisions/ADR-002-agent-handoff-boundary.md`. `compaction_enabled` del
 plugin es independiente de la configuración global `compaction.auto` de
 OpenCode.
+
+## Addendum — candidatos locales y configuración gratuita curada
+
+Se comprobó el inventario de Ollama en `127.0.0.1:11434` mediante `/api/tags`,
+`/v1/models` y generación nativa con un límite de 20 segundos. El resultado no
+se interpreta como una garantía de rendimiento sostenido: solo demuestra que el
+endpoint respondió en la prueba aislada.
+
+| Candidato local | Endpoint directo | Herramientas | Decisión |
+|---|---:|---:|---|
+| `llama3.1:8b` / `latest` | PASS | Sí | Activo |
+| `qwen2.5:7b` / `latest` | PASS | Sí | Activo |
+| `qwen2.5-coder:7b` | PASS | Sí | Activo |
+| `qwen2.5-coder:7b-cpu` | PASS, más lento | Sí | Fuera de la cadena principal |
+| `qwen2.5-coder:1.5b-base` | PASS de endpoint | No | Excluido: no sirve para el flujo con herramientas |
+| `gemma2:latest` | PASS de endpoint | No | Excluido: no sirve para el flujo con herramientas |
+| `qwen3.8:27b` / `27b-cpu` | Timeout a 20 s | Sí según Ollama | Excluidos: no demostraron salud operativa en el límite de prueba |
+| `nomic-embed-text:latest` | Embedding solamente | No | Excluido: no es modelo de chat |
+
+La cadena activa del laboratorio quedó en `C:\Users\Norbe\opencode-fallback-lab\opencode.jsonc`,
+con `enabled: false` y `free_only: true`:
+
+1. `ollama-local/qwen2.5-coder:7b`
+2. `ollama-local/qwen2.5:7b`
+3. `ollama-local/llama3.1:8b`
+4. `opencode/big-pickle`
+5. `opencode/glm-5.3-flash-free`
+6. `openrouter/cohere/north-mini-code:free`
+7. `nvidia/openai/gpt-oss-20b`
+8. `nvidia/z-ai/glm-5.3`
+
+Los destinos remotos de la cadena tuvieron respuesta PASS en canaries aislados.
+También pasaron otros modelos gratuitos de OpenCode, OpenRouter y Nvidia, pero
+no se añadieron todos para evitar una cadena larga, redundante o dependiente de
+un router aleatorio. `openrouter/openrouter/free` se conserva como opción
+manual de emergencia; no es destino principal porque selecciona el backend de
+forma dinámica y el plan gratuito tiene límites diarios.
+
+Se descartaron de la cadena automática los modelos que respondieron con 429 por
+cuota compartida, 404 por endpoint incompatible, 402 por saldo/crédito
+insuficiente, o que no admitieron herramientas. La presencia de una credencial
+en `opencode auth list` no se tomó como prueba de salud ni de gratuidad.
+
+La investigación de nuevos proveedores encontró una opción adicional razonable:
+Cerebras ofrece un nivel gratuito con clave y límites propios, pero no hay una
+credencial Cerebras conectada en este entorno; por eso no se inventó una entrada
+inoperable. Mistral ofrece un modo gratuito limitado, pero su catálogo publicado
+por OpenCode no figura como coste cero para los modelos evaluados; queda fuera
+de `free_only`. Cloudflare conserva una asignación gratuita, aunque la ruta/modelo
+probado devolvió 404 y no es una incorporación segura. GitHub Models no se
+añade porque su servicio fue retirado.
+
+La configuración global de OpenCode no fue modificada. En particular, su límite
+de `qwen2.5:7b` es más conservador/desactualizado que el límite observado en
+Ollama; el laboratorio lo sobreescribe localmente con 32768 tokens. No se
+eliminaron archivos GGUF, datos de Ollama, credenciales ni respaldos; “borrar”
+se aplicó únicamente a la cadena activa de candidatos no aptos.
+
+## Addendum — Fase 8, MVP público reproducible
+
+La versión pública preparada es `0.3.0`. Se eliminó la marca privada del
+paquete, se añadieron metadata del repositorio, licencia MIT, `SECURITY.md`,
+`CONTRIBUTING.md`, workflow de CI y un validador de release. El paquete no tiene
+dependencias runtime y conserva el contrato V2 `{ id, setup }`.
+
+Pruebas adicionales:
+
+- `tests/phase8-release.test.mjs`: 3/3; metadata pública, licencia, contenido
+  limpio del tarball, instalación offline desde el tarball y ejecución del
+  instalador portable.
+- `tests/phase7-distribution.test.mjs`: 4/4; instalación nueva, preservación
+  de configuración existente, preflight contra copias parciales y rechazo de
+  destinos dentro del origen.
+- `npm ci --ignore-scripts --offline`: PASS.
+- `npm audit --offline --omit=dev --audit-level=high`: 0 vulnerabilidades.
+- `node --check` para los módulos JavaScript: PASS.
+- `npm pack --dry-run --ignore-scripts --offline`: PASS; tarball `0.3.0`, sin
+  tests, logs, cachés, bases de datos, respaldos ni credenciales.
+- `npm test`: PASS, 82 pruebas.
+- `npm run test:e2e:local` más `PHASE3_SCENARIOS=T12 npm run test:e2e:local`:
+  PASS, T0–T12 con mocks loopback; T0 `2/0/0`, T1
+  `2/1/0`, T2/T3 `2/0/0`, T4 `2/1/1`, T5 `2/0/0`, T6 `2/0/0`, T7 `2/1/0`,
+  T8 `2/0/0`, T9 `2/1/0`, T10 `2/1/1`, T11 `2/0/0`, T12 `2/1/0`.
+
+El instalador ahora hace preflight de los archivos que administra antes de
+copiar. Si detecta una instalación previa, no sobrescribe ni deja una copia
+parcial; si el destino está dentro del origen, rechaza la operación mediante
+una comparación estructural de rutas. La configuración existente sigue siendo
+intocable y una configuración nueva queda con `enabled: false`.
+
+La release queda preparada para GitHub. La auditoría del historial y del árbol
+de trabajo no encontró coincidencias con claves, tokens, cabeceras Bearer ni
+llaves privadas; el detalle reproducible está en
+`INFORME_AUDITORIA_PUBLICACION_0.3.0.md`. No se incluyeron credenciales ni
+modelos de proveedores en el paquete.
+
+### Revisión final de calidad
+
+Se revisaron corrección, legibilidad, arquitectura, seguridad y rendimiento del
+diff de release. No quedaron hallazgos críticos ni requeridos. La compatibilidad
+sigue acotada a OpenCode V2 2.1.3; versiones posteriores deben repetir la
+matriz.
+
+## Addendum — cierre local de `0.3.0`
+
+La implementación de descubrimiento automático estricto quedó integrada en
+`lib/discovery.js` y el runtime consulta `ctx.model.list()` solamente cuando
+necesita relevar. Se normalizan costes como objeto o colección de niveles y se
+rechazan destinos pagos, de precio desconocido, disabled/deprecated, sin
+límites o capacidades compatibles. La allowlist `free_models` es la única
+excepción para precio local desconocido; no permite omitir límites ni
+capacidades desconocidos.
+
+La verificación final ejecutada el 23-10-2026 fue:
+
+- `npm test`: PASS, 82 pruebas.
+- `npm run test:e2e:local`: PASS, T0–T11; únicamente tráfico loopback,
+  incluyendo T0 `2/0/0`, T1 `2/1/0`, T4 `2/1/1`, T7 `2/1/0`, T10 `2/1/1`.
+- `PHASE3_SCENARIOS=T12 npm run test:e2e:local`: PASS, `2/1/0`, transporte
+  sin respuesta HTTP y relevo A→B.
+- `node scripts/validate-package.mjs`: PASS.
+- `node --check` sobre los módulos JavaScript: PASS.
+- `npm pack --dry-run --ignore-scripts --offline`: PASS; el paquete contiene
+  27 archivos distribuibles y no contiene tests, logs, caches ni respaldos.
+- `npm audit --omit=dev --audit-level=high`: 0 vulnerabilidades.
+- Puertos de mocks y servidores (`9129`, `9130`, `9131`, `28900`, `28901`):
+  sin listeners remanentes.
+
+Clasificación local: **APROBADO para el MVP mock-only y portable**. La
+publicación pública y la clonación limpia son puertas de entrega separadas;
+no convierten el comportamiento en infalible ni sustituyen canaries
+opcionales con proveedores reales.

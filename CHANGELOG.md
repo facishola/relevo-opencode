@@ -5,6 +5,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.0] - 2026-10-23
+
+### Added
+- Strict automatic discovery of free fallback models from `ctx.model.list()`.
+- Compatibility with object and tiered-array model cost metadata.
+- Capability, enabled/deprecated, context and output-limit filtering.
+- Portable installer defaults with discovery enabled but runtime disabled.
+- Discovery diagnostics in the session control status.
+
+### Changed
+- A smaller destination context is allowed when the measured request fits its
+  80% safety budget; declared source and destination window sizes are no longer
+  compared directly.
+- Package metadata and installation instructions now target
+  `github.com/facishola/relevo-opencode`.
+- Removed the laboratory-specific absolute log path from the runtime.
+
 ## [0.1.0] - 2026-10-22
 
 ### Added
@@ -39,6 +56,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - T9: Active model tracking — PASS
 - T10: Cooldown/cycles — PASS
 - T11: Regression baseline — PASS
+
+## [0.2.0] - 2026-10-23
+
+### Added
+- Public GitHub-ready package metadata, MIT license, security policy and CI.
+- Release validation for metadata, package contents and generated artifacts.
+- Public clone/download installation instructions and package validation.
+- Installer preflight that prevents partial writes when managed files already exist.
+
+### Changed
+- The package is no longer marked private and uses stable MVP version `0.2.0`.
+- Documentation now distinguishes the public MVP from the tested OpenCode
+  compatibility boundary and external-provider availability.
+
+### Security
+- The release package excludes tests, logs, caches, databases, backups and
+  provider credentials.
 
 ## [Unreleased]
 

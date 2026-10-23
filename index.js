@@ -24,6 +24,7 @@ import { FallbackPolicy } from "./lib/policy.js";
 import { estimateContext, evaluateContextFit } from "./lib/context.js";
 import { RuntimeActivityTracker } from "./lib/activity.js";
 import { compactionRequestId, evaluateCompactionNeed } from "./lib/compaction.js";
+import { discoverFreeModels, getRequestRequirements } from "./lib/discovery.js";
 import {
   canonicalModelId,
   getRuntimeVersion,
@@ -105,9 +106,6 @@ export class AsyncLogger {
   }
 }
 
-const LOG_DIR = "C:\\Users\\Norbe\\opencode-fallback-lab\\plugins\\opencode-fallback";
-const LOG_FILE = join(LOG_DIR, "opencode-fallback.log");
-
 function modelRef(modelId) {
   return parseModelRef(modelId);
 }
@@ -140,7 +138,8 @@ export default {
     const chain = normalizeModelChain(options.fallback_models);
     const freeModels = normalizeModelChain(options.free_models);
     const unavailable = normalizeModelChain(options.unavailable_models);
-    const effectiveChain = options.free_only === true
+    const autoDiscoverFreeModels = options.auto_discover_free_models === true;
+    let effectiveChain = options.free_only === true
       ? chain.valid.filter((modelId) => freeModels.valid.includes(modelId))
       : chain.valid;
     const policyOptions = {
@@ -149,6 +148,7 @@ export default {
       free_models: freeModels.valid,
       unavailable_models: unavailable.valid,
     };
+    let discoveryReport = null;
 
     // Logger asíncrono
     const logDir = options.logDir || join(ctx.cwd || process.cwd(), "logs");
@@ -161,6 +161,7 @@ export default {
 
     const freeOnlyConfigInvalid = enabled
       && options.free_only === true
+      && !autoDiscoverFreeModels
       && (freeModels.valid.length === 0 || effectiveChain.length === 0);
 
     if (enabled) {
@@ -223,7 +224,7 @@ export default {
     }
 
     if (freeOnlyConfigInvalid) {
-      log("PLUGIN INCOMPATIBLE free_only=true requiere free_models y una cadena con destinos explícitamente gratuitos");
+      log("PLUGIN INCOMPATIBLE free_only=true requiere auto_discover_free_models=true o una cadena explícita de destinos gratuitos");
       return async () => { await logger.close(); };
     }
 
@@ -260,7 +261,9 @@ export default {
     const configuredMaxTransitions = Number(options.max_transitions);
     const maxTransitions = Number.isInteger(configuredMaxTransitions) && configuredMaxTransitions > 0
       ? Math.min(configuredMaxTransitions, MAX_SESSION_STATE_ITEMS)
-      : Math.min(Math.max(1, policy.chain.length), MAX_SESSION_STATE_ITEMS);
+      : autoDiscoverFreeModels
+        ? 3
+        : Math.min(Math.max(1, policy.chain.length), MAX_SESSION_STATE_ITEMS);
 
     function emptySessionState() {
       return {
@@ -458,6 +461,15 @@ export default {
         visitedModels: state.visitedModels,
         fallbackModels: effectiveChain,
         freeOnly: options.free_only === true,
+        autoDiscoverFreeModels,
+        discovery: discoveryReport
+          ? {
+            candidates: discoveryReport.models.map(({ id }) => id),
+            excluded: discoveryReport.excluded,
+            truncated: discoveryReport.truncated,
+            error: discoveryReport.error || null,
+          }
+          : null,
         freeModels: freeModels.valid,
         unavailableModels: unavailable.valid,
         blockedProviders: providerBlockStatus(),
@@ -547,6 +559,7 @@ export default {
         rememberContextSnapshot(sessionID, {
           modelId,
           estimate,
+          requirements: getRequestRequirements(event),
           revision,
           capturedAt: Date.now(),
           compactionCompletedAt: activity.snapshot(sessionID)?.compactionCompletedAt || 0,
@@ -627,8 +640,68 @@ export default {
         });
     }
 
-    async function listModelsBounded() {
-      return withTimeout(() => ctx.model.list(), options.model_list_timeout_ms);
+    const modelListCache = {
+      value: null,
+      fetchedAt: 0,
+      pending: null,
+    };
+
+    async function listModelsBounded(force = false) {
+      const configuredTtl = Number(options.model_list_cache_ttl_ms);
+      const ttl = Number.isFinite(configuredTtl) && configuredTtl >= 0
+        ? Math.min(Math.floor(configuredTtl), 5 * 60 * 1000)
+        : 30_000;
+      if (!force && modelListCache.value !== null && Date.now() - modelListCache.fetchedAt < ttl) {
+        return modelListCache.value;
+      }
+      if (modelListCache.pending) return modelListCache.pending;
+
+      modelListCache.pending = withTimeout(() => ctx.model.list(), options.model_list_timeout_ms)
+        .then((value) => {
+          modelListCache.value = value;
+          modelListCache.fetchedAt = Date.now();
+          return value;
+        })
+        .finally(() => {
+          modelListCache.pending = null;
+        });
+      return modelListCache.pending;
+    }
+
+    async function refreshDiscoveredModels(request = {}) {
+      if (!autoDiscoverFreeModels) return true;
+      try {
+        const inventory = await listModelsBounded();
+        discoveryReport = await discoverFreeModels(inventory, {
+          request,
+          explicitFreeModels: freeModels.valid,
+          maxModels: 512,
+        });
+        const discoveredIds = discoveryReport.models.map(({ id }) => id);
+        const manualIds = options.free_only === true
+          ? chain.valid.filter((modelId) => freeModels.valid.includes(modelId))
+          : chain.valid;
+        effectiveChain = [...new Set([...manualIds, ...discoveredIds])];
+        policyOptions.fallback_models = effectiveChain;
+        if (debug) {
+          log(`DISCOVERY models=${discoveredIds.length} excluded=${Object.keys(discoveryReport.excluded).length} truncated=${discoveryReport.truncated}`);
+        }
+        return true;
+      } catch (error) {
+        discoveryReport = {
+          models: [],
+          excluded: {},
+          truncated: false,
+          error: redactDiagnosticText(error?.message),
+        };
+        const manualIds = options.free_only === true
+          ? chain.valid.filter((modelId) => freeModels.valid.includes(modelId))
+          : chain.valid;
+        effectiveChain = manualIds;
+        policyOptions.fallback_models = effectiveChain;
+        if (debug) log(`DISCOVERY ERROR message=${redactDiagnosticText(error?.message)}`);
+        return false;
+      }
     }
 
     async function verifyCompactionCompletion(sessionID) {
@@ -698,7 +771,10 @@ export default {
         // The policy's cooldown/attempt state is scoped to this session. The
         // model metadata cache remains shared, but failures in one session
         // must never make a destination unavailable in another session.
-        const decisionPolicy = new FallbackPolicy(policyOptions);
+        let decisionPolicy = new FallbackPolicy({
+          ...policyOptions,
+          fallback_models: effectiveChain,
+        });
         const classification = decisionPolicy.classifyError(error);
 
         // Determinar el modelo ACTUAL: usar el guardado en storage, o fallback a event.model
@@ -708,8 +784,8 @@ export default {
           // Primera vez: usar event.model o primer modelo de la cadena
           if (observedModelId) {
             currentId = observedModelId;
-          } else if (policy.chain.length > 0) {
-            currentId = policy.chain[0];
+          } else if (effectiveChain.length > 0) {
+            currentId = effectiveChain[0];
           }
           // Guardar como modelo activo inicial
           if (currentId) {
@@ -771,6 +847,13 @@ export default {
             return;
           }
         }
+
+        const contextSnapshot = contextSnapshots.get(sessionID);
+        await refreshDiscoveredModels(contextSnapshot?.requirements || { tools: {} });
+        decisionPolicy = new FallbackPolicy({
+          ...policyOptions,
+          fallback_models: effectiveChain,
+        });
 
         blockProvider(currentId, classification, now);
         if (debug && classification.blockProvider) {

@@ -1,8 +1,9 @@
 # Fallback automático de modelos para OpenCode V2
 
-Estado: MVP de laboratorio aprobado con OpenCode 2.1.3 y mocks loopback en
-T0–T12. El cierre free-only no prueba modelos pagos ni agota cuotas, no cambia
-agentes y permanece desactivado por defecto (`enabled: false`).
+Estado: MVP público `0.3.0`, validado con OpenCode 2.1.3, mocks loopback y
+proyectos aislados. No cambia agentes, no incluye credenciales y permanece
+desactivado por defecto (`enabled: false`). No es una garantía universal para
+versiones de OpenCode no probadas ni para proveedores externos.
 
 ## Qué hace
 
@@ -16,6 +17,42 @@ actividad de herramientas, contexto desconocido, destino insuficiente o
 estado de runtime no observable. Las transiciones están limitadas, son por
 sesión y modelo, y evitan ciclos y duplicados.
 
+## Instalación pública desde GitHub
+
+El método reproducible recomendado es clonar o descargar este repositorio y
+ejecutar el instalador desde el proyecto OpenCode que se quiere modificar:
+
+```powershell
+git clone https://github.com/facishola/relevo-opencode.git
+node .\relevo-opencode\scripts\install.mjs `
+  --source .\relevo-opencode `
+  --target (Get-Location).Path
+```
+
+En macOS/Linux:
+
+```bash
+git clone https://github.com/facishola/relevo-opencode.git
+node ./relevo-opencode/scripts/install.mjs \
+  --source ./relevo-opencode \
+  --target "$PWD"
+```
+
+También se puede descargar un ZIP de GitHub y usar la carpeta extraída como
+`--source`. El instalador copia el runtime, comandos y skill al proyecto, crea
+una configuración local solo si no existe y nunca habilita el fallback por sí
+mismo. Si ya existe `opencode.json` o `opencode.jsonc`, informa que hace falta
+un merge manual y no lo sobrescribe.
+
+Después de revisar la configuración, ejecutar:
+
+```powershell
+node .\relevo-opencode\scripts\validate-install.mjs --target (Get-Location).Path
+```
+
+OpenCode permite plugins locales con la forma `{ package, options }`; el
+instalador usa una ruta relativa del proyecto y mantiene el contrato V2.
+
 ## Configuración segura
 
 Añadirlo solo a la configuración del proyecto que se quiera probar:
@@ -28,11 +65,9 @@ Añadirlo solo a la configuración del proyecto que se quiera probar:
       "options": {
         "enabled": false,
         "free_only": true,
-        "free_models": [
-          "ollama-local/llama3.1:8b",
-          "google/gemini-3.5-flash-lite"
-        ],
-        "fallback_models": ["mocka/m-a", "mockb/m-b"],
+        "auto_discover_free_models": true,
+        "free_models": [],
+        "fallback_models": [],
         "retry_on_errors": [429, 500, 502, 503, 504],
         "max_attempts": 3,
         "max_transitions": 2,
@@ -64,14 +99,22 @@ considera `system`, `messages`, `tools` y la reserva de salida; un request de
 500 tokens no se envía a un destino con capacidad efectiva de 100.
 
 `free_only` es opcional y está desactivado por defecto para conservar la
-compatibilidad de cadenas existentes. Cuando vale `true`, la cadena efectiva
-debe tener una allowlist explícita en `free_models`; el plugin queda
-desactivado de forma fail-closed si falta o queda vacía. Un destino fuera de
-la allowlist no se intenta. Sin allowlist, solo se acepta un modelo cuyo
-catálogo declara coste cero en entrada y salida; precio desconocido o positivo
-se rechaza. La allowlist explícita también permite modelos locales cuyo
-catálogo no publica precios. Esta puerta protege los destinos de fallback; el
-modelo primario debe configurarse por separado como gratuito.
+compatibilidad de cadenas existentes. Con `auto_discover_free_models: true`,
+el plugin consulta el inventario local de OpenCode solo cuando necesita
+realizar un relevo y construye una cadena limitada y determinista. No hace
+preflight contra proveedores. Solo acepta modelos habilitados, no deprecated,
+con límites y capacidades compatibles, y coste cero verificable. Precio
+desconocido o positivo se rechaza. `free_models` sigue siendo una allowlist
+explícita para modelos locales cuyo catálogo no publica precios, pero no
+permite sobrepasar límites o capacidades desconocidos. `fallback_models` puede
+usarse para imponer prioridades manuales; los modelos descubiertos se añaden
+después sin duplicados. Esta puerta protege los destinos de fallback; el
+modelo primario debe configurarse por separado.
+
+El instalador genera esta modalidad con `enabled: false`, por lo que hay que
+activar el plugin explícitamente después de validar el proyecto. Si el runtime
+no expone inventario, límites o capacidades suficientes, el cambio se bloquea
+de forma fail-closed.
 
 Los límites de proveedor se distinguen de los límites de modelo. Un saldo
 insuficiente o una respuesta que menciona explícitamente organización,
@@ -143,14 +186,20 @@ El instalador no sobrescribe `opencode.json` ni `opencode.jsonc`; cuando ya
 existe una configuración, exige un merge manual y deja `enabled: false` como
 requisito de activación inicial.
 
-## Instalación local
+## Instalación local y proveedores
 
-Desde un proyecto aislado se puede instalar la carpeta o el paquete local sin
-registro:
+Desde un proyecto aislado también se puede instalar la carpeta o el paquete
+local sin registro:
 
 ```powershell
 npm install --offline --ignore-scripts --no-audit --no-fund C:\ruta\opencode-fallback
 ```
+
+El plugin no crea cuentas ni claves. Cada usuario debe conectar sus propios
+proveedores en OpenCode y declarar modelos accesibles con referencias completas.
+Una configuración gratuita típica usa Ollama local o modelos `:free` de un
+proveedor que el usuario ya haya conectado. No se incluyen ni se solicitan
+credenciales en el instalador.
 
 El skill compañero está en `skills/opencode-fallback-setup/SKILL.md`. Solo
 explica configuración, diagnóstico y rollback; no registra hooks ni ejecuta
@@ -174,6 +223,7 @@ el plugin.
 ```powershell
 npm test
 npm run test:e2e:local
+node scripts/validate-package.mjs
 node --check index.js
 npm pack --dry-run --ignore-scripts --offline
 ```
