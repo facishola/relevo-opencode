@@ -1,0 +1,21 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "plugins": [
+    {
+      "package": "./vendor/opencode-fallback",
+      "options": {
+        "enabled": false,
+        "free_only": true,
+        "free_models": [],
+        "fallback_models": [],
+        "compaction_enabled": false,
+        "context_safety_ratio": 0.8,
+        "require_context_check": true,
+        "allow_unknown_context": false,
+        "require_side_effect_guard": true,
+        "debug": false
+      }
+    }
+  ],
+  "skills": ["./.opencode/skills"]
+}

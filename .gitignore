@@ -1,0 +1,22 @@
+# Dependencias y cachés locales
+node_modules/
+.npm-cache-local/
+
+# Salidas generadas por pruebas y ejecución local
+*.log
+logs/
+**/logs/
+*.db
+*.db-shm
+*.db-wal
+**/cache*/
+**/data*/
+**/logs*/
+tests/fixtures/**/*.pile
+tests/fixtures/**/*.out
+tests/fixtures/**/probe-events.jsonl
+tests/fixtures/**/*.tgz
+
+# Copias de trabajo y respaldos históricos conservados fuera del snapshot limpio
+index.js.*_broken
+

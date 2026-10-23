@@ -1,0 +1,44 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "model": "mocka/m-a",
+  "share": "disabled",
+  "providers": {
+    "mocka": {
+      "name": "Mock A",
+      "package": "aisdk:@ai-sdk/openai-compatible",
+      "settings": { "baseURL": "http://127.0.0.1:9129/v1", "apiKey": "test" },
+      "models": { "m-a": { "name": "Mock A", "limit": { "context": 32768, "output": 8192 } } }
+    },
+    "mockb": {
+      "name": "Mock B",
+      "package": "aisdk:@ai-sdk/openai-compatible",
+      "settings": { "baseURL": "http://127.0.0.1:9130/v1", "apiKey": "test" },
+      "models": { "m-b": { "name": "Mock B", "limit": { "context": 32768, "output": 8192 } } }
+    },
+    "mockc": {
+      "name": "Mock C",
+      "package": "aisdk:@ai-sdk/openai-compatible",
+      "settings": { "baseURL": "http://127.0.0.1:9131/v1", "apiKey": "test" },
+      "models": { "m-c": { "name": "Mock C", "limit": { "context": 32768, "output": 8192 } } }
+    }
+  },
+  "plugins": [
+    {
+      "package": "C:/Users/Norbe/opencode-fallback-lab/plugins/opencode-fallback",
+      "options": {
+        "enabled": true,
+        "fallback_models": ["mocka/m-a", "mockb/m-b", "mockc/m-c"],
+        "retry_on_errors": [429, 500, 502, 503, 504],
+        "max_attempts": 3,
+        "max_transitions": 2,
+        "cooldown_ms": 0,
+        "context_safety_ratio": 0.8,
+        "require_context_check": true,
+        "allow_unknown_context": false,
+        "require_side_effect_guard": true,
+        "debug": true,
+        "logDir": "C:/Users/Norbe/opencode-fallback-lab/plugins/opencode-fallback/tests/fixtures/phase3-t1-runtime/logs"
+      }
+    }
+  ]
+}

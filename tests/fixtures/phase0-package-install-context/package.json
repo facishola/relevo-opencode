@@ -1,0 +1,5 @@
+{
+  "dependencies": {
+    "opencode-fallback": "file:opencode-fallback-0.1.0-prototype.tgz"
+  }
+}

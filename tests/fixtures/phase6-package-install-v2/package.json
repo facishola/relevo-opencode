@@ -1,0 +1,8 @@
+{
+  "name": "opencode-fallback-package-install-v2-fixture",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "opencode-fallback": "file:../../.."
+  }
+}

@@ -1,0 +1,60 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "providers": {
+    "mocka": {
+      "name": "Mock A",
+      "package": "aisdk:@ai-sdk/openai-compatible",
+      "settings": {
+        "baseURL": "http://127.0.0.1:9129/v1",
+        "apiKey": "test"
+      },
+      "models": {
+        "m-a": {
+          "name": "Mock A Model",
+          "limit": { "context": 32768, "output": 8192 }
+        }
+      }
+    },
+    "mockb": {
+      "name": "Mock B",
+      "package": "aisdk:@ai-sdk/openai-compatible",
+      "settings": {
+        "baseURL": "http://127.0.0.1:9130/v1",
+        "apiKey": "test"
+      },
+      "models": {
+        "m-b": {
+          "name": "Mock B Model",
+          "limit": { "context": 32768, "output": 8192 }
+        }
+      }
+    },
+    "mockc": {
+      "name": "Mock C",
+      "package": "aisdk:@ai-sdk/openai-compatible",
+      "settings": {
+        "baseURL": "http://127.0.0.1:9131/v1",
+        "apiKey": "test"
+      },
+      "models": {
+        "m-c": {
+          "name": "Mock C Model",
+          "limit": { "context": 32768, "output": 8192 }
+        }
+      }
+    }
+  },
+  "compaction": {
+    "auto": false,
+    "keep": { "tokens": 64 },
+    "buffer": 16000
+  },
+  "plugins": [
+    {
+      "package": "C:/Users/Norbe/opencode-fallback-lab/plugins/opencode-fallback/tests/fixtures/phase2-runtime-probe",
+      "options": {
+        "log_file": "C:/Users/Norbe/opencode-fallback-lab/plugins/opencode-fallback/tests/fixtures/phase2-probe-xdg/probe-events.jsonl"
+      }
+    }
+  ]
+}

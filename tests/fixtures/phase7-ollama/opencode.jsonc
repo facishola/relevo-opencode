@@ -1,0 +1,58 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "model": "ollama-local/llama3.1:8b",
+  "share": "disabled",
+  "skills": [
+    "C:/Users/Norbe/opencode-fallback-lab/plugins/opencode-fallback/skills"
+  ],
+  "permissions": [
+    { "action": "skill", "resource": "*", "effect": "allow" }
+  ],
+  "providers": {
+    "ollama-local": {
+      "package": "@opencode/ai/providers/openai-compatible",
+      "name": "Ollama (local test)",
+      "settings": {
+        "baseURL": "http://127.0.0.1:11434/v1"
+      },
+      "models": {
+        "qwen2.5:7b": {
+          "name": "Qwen2.5 7B",
+          "limit": { "context": 32768, "output": 4096 }
+        },
+        "llama3.1:8b": {
+          "name": "Llama 3.1 8B",
+          "limit": { "context": 131072, "output": 8192 }
+        }
+      }
+    }
+  },
+  "plugins": [
+    {
+      "package": "C:/Users/Norbe/opencode-fallback-lab/plugins/opencode-fallback",
+      "options": {
+        "enabled": true,
+        "free_only": true,
+        "free_models": [
+          "ollama-local/llama3.1:8b",
+          "ollama-local/qwen2.5:7b"
+        ],
+        "fallback_models": [
+          "ollama-local/llama3.1:8b",
+          "ollama-local/qwen2.5:7b"
+        ],
+        "retry_on_errors": [429, 500, 502, 503, 504],
+        "max_attempts": 2,
+        "max_transitions": 1,
+        "cooldown_ms": 0,
+        "context_safety_ratio": 0.8,
+        "require_context_check": true,
+        "allow_unknown_context": false,
+        "require_side_effect_guard": true,
+        "compaction_enabled": false,
+        "debug": true,
+        "logDir": "C:/Users/Norbe/opencode-fallback-lab/plugins/opencode-fallback/tests/fixtures/phase7-ollama/logs"
+      }
+    }
+  ]
+}

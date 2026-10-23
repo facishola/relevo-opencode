@@ -1,0 +1,28 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "providers": {
+    "mocka": {
+      "name": "Phase 2 Tool Mock",
+      "package": "aisdk:@ai-sdk/openai-compatible",
+      "settings": {
+        "baseURL": "http://127.0.0.1:9152/v1",
+        "apiKey": "test"
+      },
+      "models": {
+        "m-a": {
+          "name": "Phase 2 Tool Model",
+          "limit": { "context": 32768, "output": 8192 }
+        }
+      }
+    }
+  },
+  "plugins": [
+    {
+      "package": "C:/Users/Norbe/opencode-fallback-lab/plugins/opencode-fallback/tests/fixtures/phase2-runtime-probe",
+      "options": {
+        "register_tool": true,
+        "log_file": "C:/Users/Norbe/opencode-fallback-lab/plugins/opencode-fallback/tests/fixtures/phase2-tool-xdg/probe-events.jsonl"
+      }
+    }
+  ]
+}
